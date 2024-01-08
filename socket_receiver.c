@@ -8,24 +8,7 @@
 #include <time.h>
 #include <stdbool.h>
 #include <sys/time.h>
-
-
-#define CHIRPS 128
-#define RX 4
-#define TX 3
-#define SAMPLES 256
-#define IQ 2
-#define BYTES 2
-#define BYTES_IN_PACKET 1456
-#define BYTES_IN_FRAME (CHIRPS * RX * TX * IQ * SAMPLES * BYTES)
-#define BYTES_IN_FRAME_CLIPPED ((BYTES_IN_FRAME / BYTES_IN_PACKET) * BYTES_IN_PACKET)
-#define PACKETS_IN_FRAME (BYTES_IN_FRAME / BYTES_IN_PACKET)
-#define PACKETS_IN_FRAME_CLIPPED (BYTES_IN_FRAME / BYTES_IN_PACKET)
-#define UINT16_IN_PACKET (BYTES_IN_PACKET / 2)
-#define UINT16_IN_FRAME (BYTES_IN_FRAME / 2)
-
-#define STATIC_IP "192.168.33.30"
-#define DATA_PORT 4098
+#include "socket_receiver.h"
 
 
 /*
@@ -162,22 +145,13 @@
 //     fclose(write_file);
 // }
 */
-
-int main(int argc, char *argv[]) {
-    
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <filename> <num_frames>\n", argv[0]);
-        return 1;
-    }
-    
-    char *name = argv[1];
-    int num_frames = atoi(argv[2]);
+void get_sensor_data(const char* filename, int num_frames) {
     int n_packets = (num_frames + 1) * 1536;
 
     int data_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (data_socket == -1) {
         perror("socket");
-        return 1;
+        return;
     }
     
     struct sockaddr_in data_recv;
@@ -188,15 +162,13 @@ int main(int argc, char *argv[]) {
     if (bind(data_socket, (struct sockaddr *)&data_recv, sizeof(data_recv)) == -1) {
         perror("bind");
         close(data_socket);
-        return 1;
+        return;
     }
-
-    strcat(name, ".bin");
     
-    if(access(name, F_OK) != -1) //File exists
+    if(access(filename, F_OK) != -1) //File exists
     {
-        if (remove(name) == 0) {
-            printf("file %s is removed\n",name);
+        if (remove(filename) == 0) {
+            printf("file %s is removed\n",filename);
         } 
         else {
             perror("Error deleting file\n");
@@ -206,17 +178,16 @@ int main(int argc, char *argv[]) {
     int c = 0;
     int last_packet_num = 0;
     int lost_count = 0;
-    FILE *file = fopen(name, "ab");
+    FILE *file = fopen(filename, "ab");
     if (file == NULL) {
         
         perror("fopen");
         close(data_socket);
-        return 1;
+        return;
     }
      
     struct timeval start_time;
     gettimeofday(&start_time, NULL);
-    printf("Hello");
 
     //Loop over all packets and receive
     for (c = 0; c < n_packets; c++) {
@@ -264,8 +235,21 @@ int main(int argc, char *argv[]) {
     printf("%d\n", lost_count);
     fclose(file);
     close(data_socket);
-
-    return 0;
 }
+
+
+// int main(int argc, char *argv[]) {
+    
+//     if (argc != 3) {
+//         fprintf(stderr, "Usage: %s <filename> <num_frames>\n", argv[0]);
+//         return 1;
+//     }
+    
+//     char *name = argv[1];
+//     int num_frames = atoi(argv[2]);
+    
+
+//     return 0;
+// }
 
 

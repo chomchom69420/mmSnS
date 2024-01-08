@@ -5,16 +5,10 @@
 #include <termios.h>
 #include <time.h>
 #include <sys/time.h>
+#include "arduino_receiver.h"
 
-int main() {
-    const char* portname = "/dev/ttyACM0";  // Adjust this based on your COM port
-
+void get_arduino_data(const char* filename, const char* portname, time_t duration) {
     int serial_port = open(portname, O_RDWR);
-
-    time_t duration = 20;
-
-    //Open a file to write
-    char filename[] = "arduino_data.bin";
 
     if(access(filename, F_OK) != -1) //File exists
     {
@@ -30,7 +24,7 @@ int main() {
     if (file == NULL) {
         
         perror("fopen");
-        return 1;
+        return;
     }
 
     struct timeval start_time;
@@ -39,14 +33,14 @@ int main() {
 
     if (serial_port < 0) {
         perror("Error opening serial port");
-        return 1;
+        return;
     }
 
     struct termios tty;
     if (tcgetattr(serial_port, &tty) != 0) {
         perror("Error getting serial port attributes");
         close(serial_port);
-        return 1;
+        return;
     }
 
     cfsetospeed(&tty, B115200);  // Adjust the baud rate as needed
@@ -72,7 +66,7 @@ int main() {
     if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
         perror("Error setting serial port attributes");
         close(serial_port);
-        return 1;
+        return;
     }
 
     // Read data from the serial port
@@ -87,16 +81,17 @@ int main() {
         bytesRead = read(serial_port, buffer, sizeof(buffer));
         if (bytesRead > 0) {
 
-            // printf("%s", buffer);
             count++;
-            struct timeval current_time;
-            gettimeofday(&current_time, NULL);
-            // double t = (current_time.tv_sec - start_time.tv_sec) + (current_time.tv_usec - start_time.tv_usec) / 1e6;
+
+            //Storing current time as epochs for timestamping
             long long t = time(NULL);
 
             float left_omega, right_omega, angle;
+
+            //Parse and store variables from the UART buffer
             sscanf(buffer, "L: %f R: %f A:%f\n", &left_omega, &right_omega, &angle) == 2;
 
+            //Write values to the file with timestamp
             fwrite(&t, sizeof(long long), 1, file);
             fwrite(&right_omega, sizeof(double), 1, file);
             fwrite(&left_omega, sizeof(double), 1, file);
@@ -113,7 +108,19 @@ int main() {
     close(serial_port);
     fclose(file);
 
+    //Print number of datapoints read
     printf("Count = %d", count);
 
-    return 0;
 }
+
+// int main() {
+//     const char* portname = "/dev/ttyACM0";  // Adjust this based on your COM port
+
+    
+
+//     time_t duration = 20;
+
+    
+
+//     return 0;
+// }
