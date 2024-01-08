@@ -27,6 +27,8 @@
 #define STATIC_IP "192.168.33.30"
 #define DATA_PORT 4098
 
+
+/*
 // void read_and_print_file(const char *filename, size_t packet_size) {
 //     FILE *read_file = fopen(filename, "rb");
     
@@ -159,6 +161,7 @@
 //     fclose(read_file);
 //     fclose(write_file);
 // }
+*/
 
 int main(int argc, char *argv[]) {
     
@@ -188,9 +191,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-
-    
-
     strcat(name, ".bin");
     
     if(access(name, F_OK) != -1) //File exists
@@ -217,45 +217,55 @@ int main(int argc, char *argv[]) {
     struct timeval start_time;
     gettimeofday(&start_time, NULL);
     printf("Hello");
-    // // List of dictionaries to store packet_num and packet_data
+
+    //Loop over all packets and receive
     for (c = 0; c < n_packets; c++) {
+        
         char data[4000];
         struct sockaddr_in addr;
         socklen_t addr_len = sizeof(addr);
+
+        //Receiving the data from the data socket. If successful, 1466 bytes of data should be received in the packet
+        //stored in the variable data
         ssize_t bytes_received = recvfrom(data_socket, data, sizeof(data), 0, (struct sockaddr *)&addr, &addr_len);
-        // ssize_t bytes_received =1466;
         
         if (bytes_received == -1) {
             perror("recvfrom");
             break;
         }
 
-        struct timeval current_time;
-        gettimeofday(&current_time, NULL);
+        // struct timeval current_time;
+        // gettimeofday(&current_time, NULL);
         // double t = (current_time.tv_sec - start_time.tv_sec) + (current_time.tv_usec - start_time.tv_usec) / 1e6;
+
+        //Store current time in epochs for timestamping
         long long t = time(NULL);
 
         uint64_t packet_num;
         memcpy(&packet_num, data, 4);
-        // printf("%ld\n",packet_num);
 
+        //Store time and data of a packet in the bin file
         fwrite(&t, sizeof(long long), 1, file);
         fwrite(data, 1, bytes_received, file);
 
+        
         if (c == 0) {
             last_packet_num = packet_num;
-        } else if (last_packet_num < packet_num - 1) {
+        }
+        //If packet is lost, then packet number will be skipped, increment lost_count
+        //Nothing is done with lost packets here, just to print. Lost packets are dealt with in data_read.py
+        else if (last_packet_num < packet_num - 1) {
             lost_count += 1;
         }
         last_packet_num = packet_num;
     }
 
-    // Write the list of dictionaries to the file
+    //Print out the number of lost packets in the entire data
     printf("%d\n", lost_count);
     fclose(file);
     close(data_socket);
 
-    // return 0;
+    return 0;
 }
 
 
