@@ -5,7 +5,7 @@ import time
 import numpy as np
 import array as arr
 import configuration as cfg
-from scipy.ndimage import convolve1d
+# from scipy.ndimage import convolve1d
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -89,7 +89,7 @@ def bin2np_frame(bin_frame):  #
 
 def frameReshape(frame, frameConfig):  #
     frameWithChirp = np.reshape(frame, (
-    frameConfig.numLoopsPerFrame, frameConfig.numTxAntennas, frameConfig.numRxAntennas, -1))
+                                frameConfig.numLoopsPerFrame, frameConfig.numTxAntennas, frameConfig.numRxAntennas, -1))
     return frameWithChirp.transpose(1, 2, 0, 3)
 
 
@@ -236,7 +236,7 @@ if __name__ == '__main__':
     shift_arr = cfg.MMWAVE_RADAR_LOC
     bin_reader = RawDataReader(bin_filename)
     frame_no = 0
-    phase_array = np.zeros(128*600, dtype=np.float32)
+    phase_array = np.zeros(cfg.LOOPS_PER_FRAME*600, dtype=np.float32)
     for frame_no in range(total_frame_number):
         bin_frame = bin_reader.getNextFrame(pointCloudProcessCFG.frameConfig)
         np_frame = bin2np_frame(bin_frame)
@@ -245,19 +245,21 @@ if __name__ == '__main__':
         rangeResult = rangeFFT(reshapedFrame, frameConfig)
         if pointCloudProcessCFG.enableStaticClutterRemoval:
             rangeResult = clutter_removal(rangeResult, axis=2)
-        range_FFT=rangeResult[0][0]#128*256 #
+        range_FFT=rangeResult[0][0]#cfg.LOOPS_PER_FRAME*256 #
         
         # if frame_no==30:
-            # sns.heatmap(np.abs(range_FFT))
-            # plt.show()
+        #     sns.heatmap(np.abs(range_FFT))
+        #     plt.show()
         idx = np.argmax(np.abs(range_FFT[0]))
-        p_array=np.zeros(128)
-        for i in range(128):
-            p_array[i]=np.arctan(range_FFT[i][idx].imag/range_FFT[i][idx].real)
-        phase_array[frame_no*128:frame_no*128+128]=p_array
-    plt.plot(phase_array)
-    plt.ylim([-3.14, 3.14])
-    plt.show()
+        p_array=np.zeros(cfg.LOOPS_PER_FRAME)
+        if frame_no==5:
+            for i in range(cfg.LOOPS_PER_FRAME):
+                p_array[i]=np.arctan(range_FFT[i][idx].imag/range_FFT[i][idx].real)
+            
+            phase_array[frame_no*cfg.LOOPS_PER_FRAME:frame_no*cfg.LOOPS_PER_FRAME+cfg.LOOPS_PER_FRAME]=p_array
+            plt.plot(p_array)
+            plt.ylim([-3.14, 3.14])
+            plt.show()
         
         
         
