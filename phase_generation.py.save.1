@@ -246,6 +246,7 @@ if __name__ == '__main__':
     pointCloudProcessCFG = PointCloudProcessCFG()
     shift_arr = cfg.MMWAVE_RADAR_LOC
     bin_reader = RawDataReader(bin_filename)
+
     frame_no = 0
     idx_array = []
     last_idx=0
@@ -262,8 +263,7 @@ if __name__ == '__main__':
         # if frame_no==30:
         #     sns.heatmap(np.abs(range_FFT))
         #     plt.show()
-       # range_FFT[0][:10]=0
-        print(range_FFT.shape)
+        range_FFT[0][:10]=0
         if frame_no == 0:
         	last_idx = np.argmax(np.abs(range_FFT[0]))
         	idx_array.append(last_idx)
@@ -275,7 +275,7 @@ if __name__ == '__main__':
         
         #for i in range(cfg.LOOPS_PER_FRAME):
         	#phase_all_frames.append(np.arctan(range_FFT[i][idx].imag/range_FFT[i][idx].real))
-        phase_all_frames.append(np.mean(np.arctan(range_FFT[:,idx].imag/range_FFT[:,idx].real)))
+        phase_all_frames.append(np.mean(np.arctan(range_FFT[:][idx].imag/range_FFT[:][idx].real)))
         if frame_no in [21]:
             sns.heatmap(np.abs(range_FFT))
             plt.show()
