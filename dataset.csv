@@ -1,3 +1,4 @@
+filename, Nf, Nc, Tc, ADC SAMPLES, SAMPLING RATE, Periodicity, PWM, L, R, Description, Vb, dphi/dt, Object orientation
 2024-02-14_10.bin,10,182,72,256,4400,200,10,720,720,"straight object, test",3.5,-0.028354200000000003,Straight
 2024-02-14_10.bin,200,182,72,256,4400,200,10,360,360,straight object,3.1,-0.02511372,Straight
 2024-02-14_0.bin,50,182,72,256,4400,200,0,360,360,"straight object, static",0.0,-0.0,Straight
