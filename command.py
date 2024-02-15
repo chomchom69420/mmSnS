@@ -5,6 +5,7 @@ import sys
 import os
 import csv
 import datetime
+import argparse
 def send_command_to_arduino(serial_port, command):
     try:
         # Initialize serial connection
@@ -45,25 +46,47 @@ def execute_c_program_and_control_arduino(arduino_port, c_program_path, c_progra
     send_command_to_arduino(arduino_port, "STOP")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='parser for params')
+    parser.add_argument('-nf', '--nframes', type=int, help='Number of frames')
+    parser.add_argument('-nc', '--nchirps', type=int, help='Number of chirps in a frame, usually 182')
+    parser.add_argument('-tc', '--timechirp', type=int, help='Chrip time is microseconds, usually 72')
+    parser.add_argument('-s', '--samples', type=int, help='Number of ADC samples, or range bins, usually 256')
+    parser.add_argument('-r', '--rate', type=int, help='Sampling rate, usually 4400')
+    parser.add_argument('-tf', '--timeframe', type=int, help='Periodicity or Frame time in milliseconds')
+    parser.add_argument('-p', '--pwm', type=int, help='Motor pwm value')
+    parser.add_argument('-l', '--length', type=int, help='Initial length')
+    parser.add_argument('-r0', '--radial', type=int, help='Initial radial distance')
+    parser.add_argument('-d', '--descp', type=int, help='Data description')
     os.system("sudo macchanger --mac=c0:18:50:da:37:e0 eth0")
     os.system("sudo chmod a+rw /dev/ttyACM0")
     ans2=input("Have you connected the arduino cable to the jetson yes/no: ")
     ans1=input("Have you connected the ethernet to Jetson? yes/no: ")
     if ans1=='yes' and ans2=='yes':
         arduino_port = "/dev/ttyACM0"  # Replace with your actual port
-        c_program_path = "/home/jetson/Desktop/BTP/data_collection/mmSnS/data_collect_mmwave_only"   #Replace with the path to your compiled C program
+        c_program_path = "/home/jetson/Desktop/BTP/data_collection/mmSnS/data_collect_mmwave_only"   
         today = datetime.date.today()
         date_string = today.strftime('%Y-%m-%d')
-        n_frames=sys.argv[1]
-        n_chirps=sys.argv[2]
-        tc=sys.argv[3]
-        adc_samples=sys.argv[4]
-        sampling_rate=sys.argv[5]
-        periodicity=sys.argv[6]
-        pwm_value=sys.argv[7]
-        l=sys.argv[8]
-        r0=sys.argv[9]
-        descri=sys.argv[10]
+        args = parser.parse_args()
+        n_frames = args.nframes
+        n_chirps = args.nchirps
+        tc       = args.timechirp
+        adc_samples = args.samples
+        sampling_rate = args.rate
+        periodicity = args.timeframe
+        pwm_value = args.pwm
+        l = args.length
+        r0 = args.radial
+        descri = args.descp
+        # n_frames=sys.argv[1]
+        # n_chirps=sys.argv[2]
+        # tc=sys.argv[3]
+        # adc_samples=sys.argv[4]
+        # sampling_rate=sys.argv[5]
+        # periodicity=sys.argv[6]
+        # pwm_value=sys.argv[7]
+        # l=sys.argv[8]
+        # r0=sys.argv[9]
+        # descri=sys.argv[10]
         file_name=date_string+"_"+pwm_value+".bin"
         c_program_args=[file_name,n_frames]
         if(int(pwm_value))<=255:
