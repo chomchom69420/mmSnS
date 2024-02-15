@@ -88,6 +88,12 @@ if __name__ == "__main__":
                 writer=csv.writer(file)
                 writer.writerow(data)
                 print('Data appended successfully')
+            
+            #Push to github repo 
+            os.system("git add .");
+            os.system(f"git commit -m \"added entry for date {date_string} and {pwm_value}\"")
+            os.sytem("git push origin main")
+            print("Data pushed successfully")
         if(int(pwm_value))>255:
             send_command_to_arduino(arduino_port,"START"+pwm_value);
             time.sleep(int(int(n_frames)/5)+2)
