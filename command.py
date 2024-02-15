@@ -70,6 +70,12 @@ if __name__ == "__main__":
             execute_c_program_and_control_arduino(arduino_port, c_program_path,c_program_args,pwm_value)
         
             bot_vel=float(input("Enter ground truth bot velocity in cm/s: "))
+            ans_to_keep=input('Do you want to keep the reading? yes/no : ')
+            if(ans_to_keep=='no'):
+                os.system(f"rm {file_name}")
+                print(f"{file_name} deleted successfully")
+                sys.exit()
+            os.system("mv *.bin /media/jetson/93D9-AADB/")
             expected_del_phi_peak=-(3.14*bot_vel*3*86*0.00001)
             file_path="dataset.csv"
             data=[file_name,n_frames,n_chirps,tc,adc_samples,sampling_rate,periodicity,pwm_value,l,r0,descri,bot_vel,expected_del_phi_peak]
