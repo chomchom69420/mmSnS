@@ -64,8 +64,8 @@ if __name__ == "__main__":
     if ans1=='yes' and ans2=='yes':
         arduino_port = "/dev/ttyACM0"  # Replace with your actual port
         c_program_path = "/home/jetson/Desktop/BTP/data_collection/mmSnS/data_collect_mmwave_only"   
-        now = datetime.datetime.now()
-        date_string = now.strftime('%Y-%m-%d_%H:%M:%S')
+        now = datetime.date.today()
+        date_string = str(now.strftime('%Y-%m-%d'))
         args = parser.parse_args()
         n_frames = str(args.nframes)
         n_chirps = str(args.nchirps)
@@ -77,6 +77,7 @@ if __name__ == "__main__":
         l = str(args.length)
         r0 = str(args.radial)
         descri = args.descp
+        date_string+="_" + descri
         # n_frames=sys.argv[1]
         # n_chirps=sys.argv[2]
         # tc=sys.argv[3]
@@ -98,7 +99,7 @@ if __name__ == "__main__":
                 os.system(f"rm {file_name}")
                 print(f"{file_name} deleted successfully")
                 sys.exit()
-            os.system("mv *.bin /media/jetson/93D9-AADB/")
+            os.system(f"mv {file_name} /media/jetson/93D9-AADB/")
             expected_del_phi_peak=-(3.14*bot_vel*3*86*0.00001)
             file_path="dataset.csv"
             data=[file_name,n_frames,n_chirps,tc,adc_samples,sampling_rate,periodicity,pwm_value,l,r0,descri,bot_vel,expected_del_phi_peak]
@@ -113,10 +114,10 @@ if __name__ == "__main__":
                 print('Data appended successfully')
             
             #Push to github repo 
-            os.system("git add .");
-            os.system(f"git commit -m \"added entry for date {date_string} and {pwm_value}\"")
-            os.sytem("git push origin main")
-            print("Data pushed successfully")
+           # os.system("git add .");
+           # os.system(f"git commit -m \"added entry for date {date_string} and {pwm_value}\"")
+           # os.sytem("git push origin main")
+           # print("Data pushed successfully")
         if(int(pwm_value))>255:
             send_command_to_arduino(arduino_port,"START"+pwm_value);
             time.sleep(int(int(n_frames)/5)+2)
