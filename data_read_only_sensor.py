@@ -43,8 +43,8 @@ def read_and_print_dca_file(filename, packet_size):
             last_packet_num=packet_num
             # byte_count=struct.unpack('>Q',b'\x00\x00'+data[4:10][::-1])[0]
             if (packet_num%(1536))==0:
-                print("iske baad se data read chalu karenge")
-                print(packet_num)
+                # print("iske baad se data read chalu karenge")
+                # print(packet_num)
                 break
         
         packet_idx_in_frame=0
@@ -116,8 +116,8 @@ def read_and_print_dca_file(filename, packet_size):
                         j-=1 
                     frame_array[i]=frame_array[j]
         #Now we have a frame array proper of 100*(1456*1536))
-    print("Dirtysum")
-    print(np.sum(dirty_array))
+    # print("Dirtysum")
+    # print(np.sum(dirty_array))
     return frame_array,frame_time_array
 
 def annotate(dca_array,frames):
@@ -131,4 +131,4 @@ def annotate(dca_array,frames):
 
 dca_array,dca_time_array=read_and_print_dca_file(dca_name,1466)
 annotate(dca_array,FRAMES)
-print(dca_array.shape)
+# print(dca_array.shape)

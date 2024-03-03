@@ -10,6 +10,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.io import savemat
 
+plt.rcParams.update({'font.size': 24})
+plt.rcParams["figure.figsize"] = (10, 7)
+plt.rcParams["font.weight"] = "bold"
+plt.rcParams["axes.labelweight"] = "bold"
 
 def read8byte(x):
     return struct.unpack('<hhhh', x)
@@ -225,13 +229,15 @@ def reg_data(data, pc_size):  #
         pc_tmp = data[pc_list]
     return pc_tmp
 
-def phase_unwrapping(numFrame,signal_phase):
-	new_signal_phase=[]
-	for k in range(1,numFrame):
-		diff=signal_phase[k]-signal_phase[k-1]
-		new_signal_phase.append(np.where(diff>np.pi/2,diff-np.pi,np.where(diff<-np.pi/2,diff+np.pi,diff)))
-	#np.cumsum(diff,axis=0)
-	return np.array(new_signal_phase)
+def phase_unwrapping(phase_len,phase_cur_frame):
+    i=1
+    new_signal_phase = phase_cur_frame
+    for k,ele in enumerate(new_signal_phase):
+        if k==len(new_signal_phase)-1:
+            continue
+        if new_signal_phase[k+1] - new_signal_phase[k] > 1.5*np.pi:
+            new_signal_phase[k+1:] = new_signal_phase[k+1:] - 2*np.pi*np.ones(len(new_signal_phase[k+1:]))
+    return np.array(new_signal_phase)
 
 if __name__ == '__main__':
     
@@ -257,28 +263,32 @@ if __name__ == '__main__':
         rangeResult = rangeFFT(reshapedFrame, frameConfig)
         if pointCloudProcessCFG.enableStaticClutterRemoval:
             rangeResult = clutter_removal(rangeResult, axis=2)
-        range_FFT=rangeResult[0][0]#cfg.LOOPS_PER_FRAME*256 #
+        range_FFT=rangeResult[1][1]#cfg.LOOPS_PER_FRAME*256 #
          
         # if frame_no==30:
         #     sns.heatmap(np.abs(range_FFT))
         #     plt.show()
        # range_FFT[0][:10]=0
-        print(range_FFT.shape)
+        # print(range_FFT.shape)
         if frame_no == 0:
-        	last_idx = np.argmax(np.abs(range_FFT[0]))
-        	idx_array.append(last_idx)
-        	idx = last_idx
+            last_idx = np.argmax(np.abs(range_FFT[0]))
+            idx_array.append(last_idx)
+            idx = last_idx
         else:
             idx =np.argmax(np.abs(range_FFT[0]))
-            last_idx = idx
+            if idx>last_idx+2 or idx<last_idx-2:
+                idx=last_idx
             idx_array.append(idx)
+            last_idx=idx
         
         #for i in range(cfg.LOOPS_PER_FRAME):
         	#phase_all_frames.append(np.arctan(range_FFT[i][idx].imag/range_FFT[i][idx].real))
-        phase_all_frames.append(np.mean(np.arctan(range_FFT[:,idx].imag/range_FFT[:,idx].real)))
-        if frame_no in [21]:
-            sns.heatmap(np.abs(range_FFT))
-            plt.show()
+        if (range_FFT[:,idx].real!=0).all():
+            phase_all_frames.append(np.mean(np.arctan(range_FFT[:,idx].imag/range_FFT[:,idx].real)))
+        if frame_no in [31]:
+            # sns.heatmap(np.abs(range_FFT))
+            # plt.show()
+            print(idx)
             x_frame = []
             y_frame = []
             phase=0
@@ -294,27 +304,36 @@ if __name__ == '__main__':
                         if i<0:
                             phase=2*np.pi - np.arctan(-i/r)
                     else:
-                    	 if i>=0:
-                    	     phase=np.pi - np.arctan(-i/r)
-                    	 else:
-                    	     phase=np.pi + np.arctan(i/r)
+                        if i>=0:
+                            phase=np.pi - np.arctan(-i/r)
+                        else:
+                            phase=np.pi + np.arctan(i/r)
                     		
                 #phase_cur_frame.append(np.arctan(range_FFT[k][idx].imag/range_FFT[k][idx].real))
-                phase_cur_frame.append(phase)
+                    phase_cur_frame.append(phase)
             
-            #phase_cur_frame=phase_unwrapping(len(phase_cur_frame),phase_cur_frame)
-            #plt.plot(x_frame, y_frame)
+            #For phase unwrapping
+            phase_cur_frame=phase_unwrapping(len(phase_cur_frame),phase_cur_frame)
+
+            # plt.plot(x_frame, y_frame)
             plt.plot(phase_cur_frame)
             plt.show()
             phase_diff=[]
             for soham in range (1,len(phase_cur_frame)):
                 phase_diff.append(phase_cur_frame[soham]-phase_cur_frame[soham-1])
-                print(phase_cur_frame[soham]-phase_cur_frame[soham-1])
-            plt.hist(phase_diff,bins=400)
+                # print(phase_cur_frame[soham]-phase_cur_frame[soham-1])
+            # plt.hist(phase_diff,bins=400)
             # np.save('test10022024_1',phase_diff)
-            mat_dic = {'a': phase_diff}
-            savemat("matlab_array_test10022024_3.mat", mat_dic)
-            plt.show()
+            folder_name = "MatFiles"
+
+# Check if the folder exists, if not, create it
+            # if not os.path.exists(folder_name):
+            #     os.makedirs(folder_name)
+            # mat_dic = {'a': phase_diff}
+            # mat_filename = os.path.join(folder_name, f"{bin_filename[:-4]}.mat")
+            # savemat(mat_filename, mat_dic)
+            # plt.savefig('histogram.pdf')
+            # plt.show()
         
         
         
@@ -332,7 +351,7 @@ if __name__ == '__main__':
     
     #phase_all_frames=phase_unwrapping(len(phase_all_frames),phase_all_frames)
     #plt.plot(phase_all_frames)
-    plt.plot(idx_array)
-    plt.show()
+    # plt.plot(idx_array)
+    # plt.show()
         
     bin_reader.close()
