@@ -56,7 +56,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--pwm', type=int, help='Motor pwm value')
     parser.add_argument('-l', '--length', type=int, help='Initial length')
     parser.add_argument('-r0', '--radial', type=int, help='Initial radial distance')
-    parser.add_argument('-d', '--descp', type=int, help='Data description')
+    parser.add_argument('-d', '--descp', type=str, help='Data description')
     os.system("sudo macchanger --mac=c0:18:50:da:37:e0 eth0")
     os.system("sudo chmod a+rw /dev/ttyACM0")
     ans2=input("Have you connected the arduino cable to the jetson yes/no: ")
@@ -67,15 +67,15 @@ if __name__ == "__main__":
         now = datetime.datetime.now()
         date_string = now.strftime('%Y-%m-%d %H:%M:%S')
         args = parser.parse_args()
-        n_frames = args.nframes
-        n_chirps = args.nchirps
-        tc       = args.timechirp
-        adc_samples = args.samples
-        sampling_rate = args.rate
-        periodicity = args.timeframe
-        pwm_value = args.pwm
-        l = args.length
-        r0 = args.radial
+        n_frames = str(args.nframes)
+        n_chirps = str(args.nchirps)
+        tc       = str(args.timechirp)
+        adc_samples = str(args.samples)
+        sampling_rate = str(args.rate)
+        periodicity = str(args.timeframe)
+        pwm_value = str(args.pwm)
+        l = str(args.length)
+        r0 = str(args.radial)
         descri = args.descp
         # n_frames=sys.argv[1]
         # n_chirps=sys.argv[2]
