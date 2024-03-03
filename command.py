@@ -64,8 +64,8 @@ if __name__ == "__main__":
     if ans1=='yes' and ans2=='yes':
         arduino_port = "/dev/ttyACM0"  # Replace with your actual port
         c_program_path = "/home/jetson/Desktop/BTP/data_collection/mmSnS/data_collect_mmwave_only"   
-        today = datetime.date.today()
-        date_string = today.strftime('%Y-%m-%d')
+        now = datetime.datetime.now()
+        date_string = now.strftime('%Y-%m-%d %H:%M:%S')
         args = parser.parse_args()
         n_frames = args.nframes
         n_chirps = args.nchirps
