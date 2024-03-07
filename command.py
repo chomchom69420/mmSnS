@@ -7,7 +7,7 @@ import csv
 import datetime
 import argparse
 import cv2
-from git import Repo
+#from git import Repo
 
 def send_command_to_arduino(serial_port, command):
     try:
@@ -100,17 +100,19 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--length', type=int, help='Initial length')
     parser.add_argument('-r0', '--radial', type=int, help='Initial radial distance')
     parser.add_argument('-d', '--descp', type=str, help='Data description')
-    parser.add_argument('-c', '--camera', type=str, help="Camera annotation required or not? yes/no")
+    parser.add_argument('-camera', action='store_true')
     os.system("sudo macchanger --mac=c0:18:50:da:37:e0 eth0")
     os.system("sudo chmod a+rw /dev/ttyACM0")
     ans2=input("Have you connected the arduino cable to the jetson yes/no: ")
     ans1=input("Have you connected the ethernet to Jetson? yes/no: ")
     camera_pass = False
-    if(args.camera=="true"):
+    args = parser.parse_args()
+    print(args.camera)
+    if(args.camera):
         ans3=input("Have you connected camera cable? yes/no: ")
         if(ans3=="yes"):
             camera_pass = True
-    elif(args.camera=="false"):
+    elif(not args.camera):
         camera_pass= True
     if ans1=='yes' and ans2=='yes' and camera_pass:
         arduino_port = "/dev/ttyACM0"  
@@ -118,7 +120,6 @@ if __name__ == "__main__":
         image_folder_path = "./scene_annotation/"
         now = datetime.date.today()
         date_string = str(now.strftime('%Y-%m-%d'))
-        args = parser.parse_args()
         n_frames = str(args.nframes)
         n_chirps = str(args.nchirps)
         tc       = str(args.timechirp)
@@ -134,7 +135,7 @@ if __name__ == "__main__":
         image_name = date_string+"_"+pwm_value+".jpg"
         c_program_args=[file_name,n_frames]
         if(int(pwm_value))<=255:
-            if(args.camera=="true"):
+            if(args.camera):
                 capture_frame_and_save(image_folder_path, image_name)
             execute_c_program_and_control_arduino(arduino_port, c_program_path,c_program_args,pwm_value)
             bot_vel=float(input("Enter ground truth bot velocity in cm/s: "))
