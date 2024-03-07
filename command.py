@@ -26,7 +26,7 @@ def execute_c_program_and_control_arduino(arduino_port, c_program_path, c_progra
     send_command_to_arduino(arduino_port,"PWM"+pwm_value)
     time.sleep(1)
     send_command_to_arduino(arduino_port, "START"+pwm_value)
-    time.sleep(1)
+  
     command=[c_program_path] + c_program_args
     
     # Execute the C program
@@ -36,7 +36,6 @@ def execute_c_program_and_control_arduino(arduino_port, c_program_path, c_progra
         print("C program executed successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error executing C program: {e}")
-    time.sleep(1)
     
     # After the C program execution, automatically send STOP command to Arduino
     send_command_to_arduino(arduino_port, "STOP")
