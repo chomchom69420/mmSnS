@@ -8,7 +8,7 @@ import datetime
 import argparse
 import cv2
 #from git import Repo
-from utils import push
+#from utils import push
 
 def send_command_to_arduino(serial_port, command):
     try:
