@@ -8,18 +8,10 @@ import datetime
 import argparse
 def send_command_to_arduino(serial_port, command):
     try:
-        # Initialize serial connection
         ser = serial.Serial(serial_port, 115200, timeout=1)
-
-        # Wait for the serial connection to initialize
-        time.sleep(2)
-
-        # Send the command followed by a newline character
+        time.sleep(0.1)
         ser.write((command + "\n").encode())
-
         print(f"'{command}' command sent to Arduino.")
-
-        # Close the serial port
         ser.close()
 
     except serial.SerialException as e:
@@ -42,8 +34,26 @@ def execute_c_program_and_control_arduino(arduino_port, c_program_path, c_progra
     except subprocess.CalledProcessError as e:
         print(f"Error executing C program: {e}")
     time.sleep(1)
+    
     # After the C program execution, automatically send STOP command to Arduino
     send_command_to_arduino(arduino_port, "STOP")
+
+def capture_frame_and_save(folder_path, image_name):
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Error: Could not open camera, exiting thread")
+        sys.exit()
+        return
+    ret, frame = cap.read()
+    cap.release()
+    if ret:
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+        image_path = os.path.join(folder_path, image_name)
+        cv2.imwrite(image_path, frame)
+        print("Image saved successfully:", image_path)
+    else:
+        print("Error: Failed to capture frame")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='parser for params')
@@ -57,13 +67,22 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--length', type=int, help='Initial length')
     parser.add_argument('-r0', '--radial', type=int, help='Initial radial distance')
     parser.add_argument('-d', '--descp', type=str, help='Data description')
+    parser.add_argument('-c', '--camera', type=str, help="Camera annotation required or not? yes/no")
     os.system("sudo macchanger --mac=c0:18:50:da:37:e0 eth0")
     os.system("sudo chmod a+rw /dev/ttyACM0")
     ans2=input("Have you connected the arduino cable to the jetson yes/no: ")
     ans1=input("Have you connected the ethernet to Jetson? yes/no: ")
-    if ans1=='yes' and ans2=='yes':
-        arduino_port = "/dev/ttyACM0"  # Replace with your actual port
-        c_program_path = "/home/jetson/Desktop/BTP/data_collection/mmSnS/data_collect_mmwave_only"   
+    camera_pass = False
+    if(args.camera=="true"):
+        ans3=input("Have you connected camera cable? yes/no: ")
+        if(ans3=="yes"):
+            camera_pass = True
+    elif(args.camera=="false"):
+        camera_pass= True
+    if ans1=='yes' and ans2=='yes' and camera_pass:
+        arduino_port = "/dev/ttyACM0"  
+        c_program_path = "/home/jetson/Desktop/BTP/data_collection/mmSnS/data_collect_mmwave_only" 
+        image_folder_path = "./scene_annotation/"
         now = datetime.date.today()
         date_string = str(now.strftime('%Y-%m-%d'))
         args = parser.parse_args()
@@ -78,21 +97,13 @@ if __name__ == "__main__":
         r0 = str(args.radial)
         descri = args.descp
         date_string+="_" + descri
-        # n_frames=sys.argv[1]
-        # n_chirps=sys.argv[2]
-        # tc=sys.argv[3]
-        # adc_samples=sys.argv[4]
-        # sampling_rate=sys.argv[5]
-        # periodicity=sys.argv[6]
-        # pwm_value=sys.argv[7]
-        # l=sys.argv[8]
-        # r0=sys.argv[9]
-        # descri=sys.argv[10]
         file_name=date_string+"_"+pwm_value+".bin"
+        image_name = date_string+"_"+pwm_value+".jpg"
         c_program_args=[file_name,n_frames]
         if(int(pwm_value))<=255:
+            if(args.camera=="true"):
+                capture_frame_and_save(image_folder_path, image_name)
             execute_c_program_and_control_arduino(arduino_port, c_program_path,c_program_args,pwm_value)
-        
             bot_vel=float(input("Enter ground truth bot velocity in cm/s: "))
             ans_to_keep=input('Do you want to keep the reading? yes/no : ')
             if(ans_to_keep=='no'):
