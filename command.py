@@ -8,6 +8,7 @@ import datetime
 import argparse
 import cv2
 #from git import Repo
+from utils import push
 
 def send_command_to_arduino(serial_port, command):
     try:
@@ -57,38 +58,8 @@ def capture_frame_and_save(folder_path, image_name):
     else:
         print("Error: Failed to capture frame")
 
-def push_to_github(local_repo_path, github_repo_url, github_username, github_token):
-    repo = Repo(local_repo_path)
-
-    try:
-        # Add dataset.csv to the index
-        repo.index.add("dataset.csv")
-
-        # Commit changes
-        repo.index.commit("Automated commit - updated dataset.csv")
-
-        # Set up remote repository
-        origin = repo.remote(name='origin')
-        origin_url = origin.config_reader.get("url")
-        if origin_url != github_repo_url:
-            origin = repo.create_remote('origin', github_repo_url)
-
-        # Push changes to GitHub
-        origin.push()
-
-        print("Pushed to GitHub successfully.")
-    except Exception as e:
-        print("Error:", e)
 
 if __name__ == "__main__":
-    #Repo information
-    local_repo_path = "./"
-    github_repo_url = "https://github.com/username/repo.git"  # Replace with your repository URL
-    github_username = "your_username"
-    github_token = "your_token"  # You can use personal access token for authentication
-    file_path = "path/to/your/file"  # Specify the path of the file you want to add
-
-
     parser = argparse.ArgumentParser(description='parser for params')
     parser.add_argument('-nf', '--nframes', type=int, help='Number of frames')
     parser.add_argument('-nc', '--nchirps', type=int, help='Number of chirps in a frame, usually 182')
