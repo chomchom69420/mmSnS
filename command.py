@@ -7,13 +7,17 @@ import csv
 import datetime
 import argparse
 import cv2
+import board 
+import adafruit_mpu6050
+import threading
+from utils/imu_data_collector import collect_data
 #from git import Repo
 #from utils import push
 
 def send_command_to_arduino(serial_port, command):
     try:
         ser = serial.Serial(serial_port, 115200, timeout=1)
-        time.sleep(0.1)
+        time.sleep(2)
         ser.write((command + "\n").encode())
         print(f"'{command}' command sent to Arduino.")
         ser.close()
@@ -108,12 +112,20 @@ if __name__ == "__main__":
         if(int(pwm_value))<=255:
             if(args.camera):
                 capture_frame_and_save(image_folder_path, image_name)
+            
+            imu_duration = (n_frames+5)*periodicity / 1000; #periodicity is in ms (collect for 5 extra frames)
+            imu_filename = date_string+"_"+pwm_value+"_imu.bin"
+            imu_thread = threading.thread(target=collect_data, args=(imu_duration, imu_filename)) 
+            imu_thread.start()                                                                          #start the thread for imu data collection
             execute_c_program_and_control_arduino(arduino_port, c_program_path,c_program_args,pwm_value)
+            imu_thread.join()    #after the c thread has ended, wait for imu thread to complete
             bot_vel=float(input("Enter ground truth bot velocity in cm/s: "))
             ans_to_keep=input('Do you want to keep the reading? yes/no : ')
             if(ans_to_keep=='no'):
                 os.system(f"rm {file_name}")
                 print(f"{file_name} deleted successfully")
+                os.system(f"rm ./imu_data/{imu_filename}")
+                print(f"./imu_data/{imu_filename} deleted successfully")
                 sys.exit()
             os.system(f"mv {file_name} /media/jetson/93D9-AADB/")
             expected_del_phi_peak=-(3.14*bot_vel*3*86*0.00001)
