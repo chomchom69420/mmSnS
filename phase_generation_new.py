@@ -229,14 +229,14 @@ def print_info(info_dict):
     # img_path=f'images/{img_name}.png'
     # print(img_path)
    
-    scene_descri=cv2.imread('images/img.png')
-    if scene_descri is not None:
-        cv2.namedWindow('Scene-Descirption',cv2.WINDOW_NORMAL)
-        cv2.imshow('Scene-Descirption',scene_descri)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-    else:
-        print("Error: Image not found or unable to read.")
+    # scene_descri=cv2.imread('images/img.png')
+    # if scene_descri is not None:
+    #     cv2.namedWindow('Scene-Descirption',cv2.WINDOW_NORMAL)
+    #     cv2.imshow('Scene-Descirption',scene_descri)
+    #     cv2.waitKey(0)
+    #     cv2.destroyAllWindows()
+    # else:
+    #     print("Error: Image not found or unable to read.")
 def custom_color_map():
     colors = ["#6495ED", "yellow"]  # Start with blue, end with yellow
     n_bins = 100  # Increase this for smoother transitions
@@ -303,8 +303,8 @@ def iterative_doppler_bins_selection(dopplerResult,pointcloud_processcfg,range_p
     
     vel_idx=[]
     for peak in range_peaks:
-        vel_idx.append(np.argmax(doppler_abs_combined_nparray[:,peak])-90)
-    max_doppler_index.append(np.argmax(doppler_abs_combined_nparray[:,max_range_index[-1]])-90)
+        vel_idx.append(np.argmax(doppler_abs_combined_nparray[:,peak])-91)
+    max_doppler_index.append(np.argmax(doppler_abs_combined_nparray[:,max_range_index[-1]])-91)
     all_doppler_index.append(vel_idx)
     return vel_idx
 def get_phase(r,i):
@@ -372,6 +372,12 @@ def plot_dopppler_mobicom(doppler_vel_frame_wise,mobicom_vel_frame_wise,info_dic
     plt.tight_layout()
     plt.savefig(f'images/{info_dict["filename"][0]}.png', dpi=300)
 
+    #Save the box plot
+    #Mean_Velocity
+
+    actual_mean_velocity_from_mobicom=np.mean(mobicom_vel_frame_wise)
+
+
     # plt.show()
 def plot_range(max_range_index,info_dict):
     plt.figure(figsize=(10, 6))
@@ -419,6 +425,50 @@ def call_destructor(info_dict):
     process = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     stdout = process.stdout
     stderr = process.stderr
+def get_mae(true_vel,doppler_vel,mobicom_vel,info_dict):
+    doppler_mae=0
+    mobicom_mae=0
+    for i in range(len(doppler_vel)):
+        doppler_mae+=np.abs(true_vel/100-doppler_vel[i])
+        mobicom_mae+=np.abs(true_vel/100-mobicom_vel[i])
+    doppler_mae/=len(doppler_vel)
+    mobicom_mae/=len(mobicom_vel)
+    df = pd.DataFrame({'pwm': info_dict[' PWM'],'doppler_mae': [doppler_mae], 'mobicom_mae': [mobicom_mae]})
+    
+    # Open the csv file and append the DataFrame
+    df.to_csv('velocities.csv', mode='a', header=False, index=False)
+
+    #Also save plot
+    true_vel=np.mean(mobicom_vel)
+    doppler_mae_array=[]
+    mobicom_mae_array=[]
+    for i in range(len(doppler_vel)):
+        doppler_mae_array.append(np.abs(true_vel-doppler_vel[i]))
+        mobicom_mae_array.append(np.abs(true_vel-mobicom_vel[i]))
+    fig, ax = plt.subplots()
+
+# Creating box plots for each array
+    box1 = ax.boxplot(doppler_mae_array, positions=[1], widths=0.6, patch_artist=True,medianprops=dict(color="none"),showfliers=False)
+    box2 = ax.boxplot(mobicom_mae_array, positions=[2], widths=0.6, patch_artist=True,medianprops=dict(color="none"),showfliers=False)
+
+    # Adding labels and title
+    ax.set_xticks([1, 2])
+    ax.set_xticklabels(['Doppler', 'Mobicom Velocity'])
+    ax.set_title('Box Plot of Two Arrays')
+
+    # Adding colors
+    colors = ['lightblue', 'lightgreen']
+    for box, color in zip([box1, box2], colors):
+        for patch in box['boxes']:
+            patch.set_facecolor(color)
+
+# Show plot
+    plt.grid(True)
+    plt.grid(True)
+    plt.savefig('box_plot.png')
+
+    
+    
 def main():
     args=get_args()
     print(args.file_name)
@@ -466,6 +516,7 @@ if __name__ == '__main__':
             if ele[0]==r:
                 mobicom_vel_frame_wise.append(np.mean(np.array(ele[1])))
     plot_dopppler_mobicom(doppler_vel_frame_wise,mobicom_vel_frame_wise,info_dict)
+    get_mae(float(info_dict[' Vb'][0]),doppler_vel_frame_wise,mobicom_vel_frame_wise,info_dict)
 
     print(time.time()-t1)
 
