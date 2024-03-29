@@ -73,3 +73,10 @@ filename, Nf, Nc, Tc, ADC SAMPLES, SAMPLING RATE, Periodicity, PWM, L, R, Descri
 2024-03-04_Vicon_Pilot_6C_1obj_10.bin,200,182,72,256,4400,200,10,-1,-1,Vicon_Pilot_6C_1obj,-1.0,0.008101200000000001,Straight
 2024-03-04_Vicon_Pilot_6D_1obj_11.bin,200,182,72,256,4400,200,11,-1,-1,Vicon_Pilot_6D_1obj,-1.0,0.008101200000000001,Straight
 2024-03-04_Vicon_Pilot_6E_1obj_12.bin,200,182,72,256,4400,200,12,-1,-1,Vicon_Pilot_6E_1obj,-1.0,0.008101200000000001,Straight
+2024-03-24_imu_test_10.bin,100,182,72,256,4400,200,10,720,0,imu_test,0.0,-0.0,Oblique
+2024-03-24_imu_test_10.bin,500,182,72,256,4400,200,10,720,0,imu_test,0.0,-0.0,Oblique
+2024-03-29_vicon_test_13_13.bin,100,182,72,256,4400,200,13,300,300,vicon_test_13,-1.0,0.008101200000000001,Straight
+2024-03-29_vicon_test_13_2_13.bin,100,182,72,256,4400,200,13,300,300,vicon_test_13_2,-1.0,0.008101200000000001,Straight
+2024-03-29_vicon_test_13_2_13.bin,10,182,72,256,4400,200,13,300,300,vicon_test_13_2,-1.0,0.008101200000000001,Straight
+2024-03-29_vicon_test_14.bin,100,182,72,256,4400,200,14,300,300,vicon_test,-1.0,0.008101200000000001,Straight
+2024-03-29_vicon_test_15.bin,200,182,72,256,4400,200,15,300,300,vicon_test,-1.0,0.008101200000000001,Straight

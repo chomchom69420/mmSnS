@@ -10,7 +10,8 @@ import cv2
 import board 
 import adafruit_mpu6050
 import threading
-from utils/imu_data_collector import collect_data
+from utils.imu_data_collector import collect_data
+from utils.video_cap import capture_video
 #from git import Repo
 #from utils import push
 
@@ -76,13 +77,13 @@ if __name__ == "__main__":
     parser.add_argument('-r0', '--radial', type=int, help='Initial radial distance')
     parser.add_argument('-d', '--descp', type=str, help='Data description')
     parser.add_argument('-camera', action='store_true')
+    parser.add_argument('-imu', action='store_true')
     os.system("sudo macchanger --mac=c0:18:50:da:37:e0 eth0")
     os.system("sudo chmod a+rw /dev/ttyACM0")
     ans2=input("Have you connected the arduino cable to the jetson yes/no: ")
     ans1=input("Have you connected the ethernet to Jetson? yes/no: ")
     camera_pass = False
     args = parser.parse_args()
-    print(args.camera)
     if(args.camera):
         ans3=input("Have you connected camera cable? yes/no: ")
         if(ans3=="yes"):
@@ -112,13 +113,18 @@ if __name__ == "__main__":
         if(int(pwm_value))<=255:
             if(args.camera):
                 capture_frame_and_save(image_folder_path, image_name)
-            
-            imu_duration = (n_frames+5)*periodicity / 1000; #periodicity is in ms (collect for 5 extra frames)
-            imu_filename = date_string+"_"+pwm_value+"_imu.bin"
-            imu_thread = threading.thread(target=collect_data, args=(imu_duration, imu_filename)) 
-            imu_thread.start()                                                                          #start the thread for imu data collection
+            # video_filename =  date_string+"_"+pwm_value+".mp4"
+            # video_thread = threading.Thread(target=capture_video, args=(imu_duration, video_filename))
+            # video_thread.start()
+            if(args.imu):
+                imu_duration = (int(n_frames)+5)*int(periodicity) / 1000; #periodicity is in ms (collect for 5 extra frames)
+                imu_filename = date_string+"_"+pwm_value+"_imu.bin"
+                imu_thread = threading.Thread(target=collect_data, args=(imu_duration, imu_filename))
+                imu_thread.start()     
             execute_c_program_and_control_arduino(arduino_port, c_program_path,c_program_args,pwm_value)
-            imu_thread.join()    #after the c thread has ended, wait for imu thread to complete
+            if(args.imu):
+                imu_thread.join()    
+            # video_thread.join()
             bot_vel=float(input("Enter ground truth bot velocity in cm/s: "))
             ans_to_keep=input('Do you want to keep the reading? yes/no : ')
             if(ans_to_keep=='no'):
@@ -127,7 +133,7 @@ if __name__ == "__main__":
                 os.system(f"rm ./imu_data/{imu_filename}")
                 print(f"./imu_data/{imu_filename} deleted successfully")
                 sys.exit()
-            os.system(f"mv {file_name} /media/jetson/93D9-AADB/")
+            os.system(f"mv {file_name} /media/jetson/Seagate\ Backup\ Plus\ Drive/")
             expected_del_phi_peak=-(3.14*bot_vel*3*86*0.00001)
             file_path="dataset.csv"
             data=[file_name,n_frames,n_chirps,tc,adc_samples,sampling_rate,periodicity,pwm_value,l,r0,descri,bot_vel,expected_del_phi_peak]
