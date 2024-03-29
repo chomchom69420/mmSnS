@@ -134,6 +134,7 @@ if __name__ == "__main__":
                 print(f"./imu_data/{imu_filename} deleted successfully")
                 sys.exit()
             os.system(f"mv {file_name} /media/jetson/Seagate\ Backup\ Plus\ Drive/")
+            os.system(f"mv ./imu_data/{imu_filename} /media/jetson/Seagate\ Backup\ Plus\ Drive/imu_data/")
             expected_del_phi_peak=-(3.14*bot_vel*3*86*0.00001)
             file_path="dataset.csv"
             data=[file_name,n_frames,n_chirps,tc,adc_samples,sampling_rate,periodicity,pwm_value,l,r0,descri,bot_vel,expected_del_phi_peak]
