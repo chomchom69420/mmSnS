@@ -37,7 +37,7 @@ def read_and_print_dca_file(filename, packet_size):
             timestamp_data=file.read(8)
             if not timestamp_data:
                 break
-            timestamp=struct.unpack('d',timestamp_data)[0]
+            timestamp=struct.unpack('q',timestamp_data)[0]
             data=file.read(packet_size)
             packet_num=struct.unpack('<1l',data[:4])[0]
             last_packet_num=packet_num
