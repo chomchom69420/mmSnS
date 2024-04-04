@@ -279,7 +279,7 @@ def iterative_range_bins_detection(rangeResult,pointcloud_processcfg):
     #         peaks_min_intensity_threshold.append(indices)
 # peaks will be an array of indices of the local maxima
     print(f"Max = {np.argmax(range_abs_combined_nparray_collapsed)}")
-    # max_range_index.append(np.argmax(range_abs_combined_nparray_collapsed))
+    max_range_index.append(np.argmax(range_abs_combined_nparray_collapsed))
     all_range_index.append(peaks_min_intensity_threshold)
     return peaks_min_intensity_threshold
 def iterative_doppler_bins_selection(dopplerResult,pointcloud_processcfg,range_peaks):
