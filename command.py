@@ -65,7 +65,7 @@ def capture_frame_and_save(folder_path, image_name):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='parser for params')
+    parser = argparse.ArgumentParser(description='Process radar and motor parameters')
     parser.add_argument('-nf', '--nframes', type=int, help='Number of frames')
     parser.add_argument('-nc', '--nchirps', type=int, help='Number of chirps in a frame, usually 182')
     parser.add_argument('-tc', '--timechirp', type=int, help='Chrip time is microseconds, usually 72')

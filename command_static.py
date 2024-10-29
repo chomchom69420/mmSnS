@@ -8,7 +8,6 @@ import argparse
 import cv2
 import threading
 import platform  # Add this to detect OS
-# from utils.imu_data_collector import collect_data
 from utils.video_cap import capture_video
 
 def execute_c_program(c_program_path, c_program_args):
@@ -40,15 +39,17 @@ def capture_frame_and_save(folder_path, image_name):
         print("Error: Failed to capture frame")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Parser for params')
-    parser.add_argument('-nf', '--nframes', type=int, help='Number of frames')
-    parser.add_argument('-nc', '--nchirps', type=int, help='Number of chirps in a frame, usually 182')
-    parser.add_argument('-tc', '--timechirp', type=int, help='Chirp time is microseconds, usually 72')
-    parser.add_argument('-s', '--samples', type=int, help='Number of ADC samples, or range bins, usually 256')
-    parser.add_argument('-r', '--rate', type=int, help='Sampling rate, usually 4400')
-    parser.add_argument('-tf', '--timeframe', type=int, help='Periodicity or Frame time in milliseconds')
-    parser.add_argument('-l', '--length', type=int, help='Initial length')
-    parser.add_argument('-r0', '--radial', type=int, help='Initial radial distance')
+    parser = argparse.ArgumentParser(description='Parser for radar params')
+        
+    parser.add_argument('-nf', '--nframes', type=int, default=100, help='Number of frames (default: 100)')
+    parser.add_argument('-nc', '--nchirps', type=int, default=182, help='Number of chirps in a frame, usually 182')
+    parser.add_argument('-tc', '--timechirp', type=int, default=72, help='Chirp time in microseconds, usually 72')
+    parser.add_argument('-s', '--samples', type=int, default=256, help='Number of ADC samples, or range bins, usually 256')
+    parser.add_argument('-r', '--rate', type=int, default=4400, help='Sampling rate, usually 4400')
+    parser.add_argument('-tf', '--timeframe', type=int, default=150, help='Periodicity or Frame time in milliseconds (default: 150)')
+    parser.add_argument('-l', '--length', type=int, default=-1, help='Initial length (default: -1)')
+    parser.add_argument('-r0', '--radial', type=int, default=-1, help='Initial radial distance (default: -1)')
+    
     parser.add_argument('-d', '--descp', type=str, help='Data description')
     parser.add_argument('-camera', action='store_true')
     parser.add_argument('-imu', action='store_true')
@@ -99,6 +100,7 @@ if __name__ == "__main__":
             capture_frame_and_save(image_folder_path, image_name)
         
         if args.imu:
+            from utils.imu_data_collector import collect_data
             imu_duration = (int(n_frames) + 5) * int(periodicity) / 1000  # periodicity is in ms (collect for 5 extra frames)
             imu_filename = date_string + "_" + "_imu.bin"
             imu_thread = threading.Thread(target=collect_data, args=(imu_duration, imu_filename))
@@ -109,18 +111,19 @@ if __name__ == "__main__":
         if args.imu:
             imu_thread.join()
         
-        bot_vel = float(input("Enter ground truth bot velocity in cm/s: "))
         ans_to_keep = input('Do you want to keep the reading? yes/no : ')
         
         if ans_to_keep == 'no':
             os.remove(file_name)
             print(f"{file_name} deleted successfully")
-            imu_file_path = os.path.join("./imu_data/", imu_filename)
-            os.remove(imu_file_path)
-            print(f"{imu_file_path} deleted successfully")
+            if args.imu:
+                imu_file_path = os.path.join("./imu_data/", imu_filename)
+                os.remove(imu_file_path)
+                print(f"{imu_file_path} deleted successfully")
             sys.exit()
         
         if args.csv_store:
+            bot_vel = float(input("Enter ground truth bot velocity in cm/s: "))
             expected_del_phi_peak = -(3.14 * bot_vel * 3 * 86 * 0.00001)
             file_path = "dataset.csv" if current_os == "Linux" else "dataset.csv"  # Use relative path for both systems
             
@@ -130,7 +133,7 @@ if __name__ == "__main__":
             else:
                 data.append('Oblique')
         
-        with open(file_path, 'a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(data)
-            print('Data appended successfully')
+            with open(file_path, 'a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(data)
+                print('Data appended successfully')
